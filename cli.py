@@ -65,7 +65,7 @@ import numpy as np
 
 def plot_klines(df, symbol):
     """
-    Plot Kline data with resistance lines, ensuring x and y dimensions match.
+    Plot Kline data with resistance lines spanning the entire chart frame.
     """
     global resistance_lines
 
@@ -76,29 +76,22 @@ def plot_klines(df, symbol):
     # Prepare the resistance lines
     relevant_resistances = []
     if symbol in resistance_lines:
-        relevant_resistances = [
-            line for line in resistance_lines[symbol]
-            if pd.to_datetime(line["end_date"]) >= start_date  # Ends after the chart starts
-        ]
+        relevant_resistances = resistance_lines[symbol]  # Use all resistance lines for the symbol
 
     # Prepare additional lines for mplfinance
     additional_lines = []
     for line in relevant_resistances:
         price = line["price"]
-        line_start = max(pd.to_datetime(line["start_date"]), start_date)  # Clip to chart start
-        line_end = min(pd.to_datetime(line["end_date"]), end_date)  # Clip to chart end
 
-        # Create a ydata array that matches the full xdates (df.index)
-        ydata = np.full(len(df.index), np.nan)  # Initialize with NaN
-        mask = (df.index >= line_start) & (df.index <= line_end)  # Where the resistance line is valid
-        ydata[mask] = price  # Set the resistance price for the valid range
+        # Create a ydata array that spans the entire chart
+        ydata = [price] * len(df.index)  # Constant value for all x-axis points
 
         additional_lines.append(
             mpf.make_addplot(
                 ydata,
                 panel=0,  # Main panel
                 color="red",  # Resistance line color
-                linestyle="--"
+                linestyle="-",
             )
         )
 
